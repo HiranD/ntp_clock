@@ -9,8 +9,9 @@
 #include <TimeLib.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
-#include "Wire.h"
-#include "Max44009.h"
+#include <Wire.h>
+#include <Max44009.h>
+#include <Battery18650Stats.h>
 
 // Define constants and variables
 #define ONE_WIRE_BUS 2  // OneWire bus pin
@@ -20,8 +21,11 @@
 #define NTP_SERVER "europe.pool.ntp.org"  // NTP server
 #define TIME_OFFSET 7200  // Time offset in seconds
 #define UPDATE_INTERVAL 60000  // 60-second NTP update interval
-// #define RESYNC_WAIT_IN_SECONDS 432000  // Time interval for NTP sync (5 days)
-#define RESYNC_WAIT_IN_SECONDS 3600  // Time interval for NTP sync (5 days)
+#define RESYNC_WAIT_IN_SECONDS 43200  // Time interval for NTP sync (1 days)
+// Initialize battery stats
+#define ADC_PIN 35  // ADC pin for battery reading
+#define CONVERSION_FACTOR 1.78  // Conversion factor for battery voltage
+#define READS 5 // Quantity of reads to get an average of pin readings
 
 // Define global variables for lux thresholds and contrast levels
 float luxThresholdLow = 100.0;
@@ -39,13 +43,6 @@ unsigned long wifiRetryInterval = 21600000;  // 6 hours in milliseconds
 int consecutiveFails = 0;  // Consecutive number of WiFi connection failures
 bool isWiFiConnected = false;
 
-// Initialize battery stats
-#include <Battery18650Stats.h>
-#define ADC_PIN 35  // ADC pin for battery reading
-#define CONVERSION_FACTOR 1.78  // Conversion factor for battery voltage
-#define READS 5 // Quantity of reads to get an average of pin readings
-Battery18650Stats battery(ADC_PIN, CONVERSION_FACTOR, READS);
-
 // Initialize global variables
 unsigned long lastTime = 0;  // Last time of temperature reading
 uint8_t batteryPercent = 0;  // Battery percentage
@@ -62,6 +59,7 @@ OneWire oneWire(ONE_WIRE_BUS);  // OneWire instance
 DallasTemperature tempSensor(&oneWire);  // Temperature sensor
 Max44009 max44009(0x4A, lightSensorSDA, lightSensorSCL);  // Light sensor
 U8G2_SSD1322_NHD_256X64_1_4W_SW_SPI u8g2(U8G2_R0, 27, 25, 0, 32, 4);  // Display
+Battery18650Stats battery(ADC_PIN, CONVERSION_FACTOR, READS); // Battery status
 
 // Degree symbol for temperature display
 const char DEGREE_SYMBOL[] = { 0xB0, '\0' };
